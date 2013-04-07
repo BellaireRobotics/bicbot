@@ -80,8 +80,8 @@ void lift_setPosition(int position) {
 }
 
 void intake_set(int speed) {
-	motor[rightIntake] = speed;
-	motor[leftIntake] = speed;
+  motor[rightIntake] = speed;
+  motor[leftIntake] = speed;
 }
 
 int getopt_auton_select(int num_opts) {
@@ -126,17 +126,17 @@ task lift() {
 }
 
 task intake() {
-	int threshold = 20;
+  int threshold = 20;
 
-	while (true) {
-		if (vexRT[Btn6U] || vexRT[Ch2Xmtr2] > threshold) {
-			intake_set(vexRT[Btn6U] ? SPEED4 : vexRT[Ch2Xmtr2]);
-		} else if (vexRT[Btn6D] || vexRT[Ch2Xmtr2] < -threshold) {
-			intake_set(vexRT[Btn6D] ? -SPEED4 : vexRT[Ch2Xmtr2]);
-		} else {
-			intake_set(0);
-		}
-	}
+  while (true) {
+    if (vexRT[Btn6U] || vexRT[Ch2Xmtr2] > threshold) {
+      intake_set(vexRT[Btn6U] ? SPEED4 : vexRT[Ch2Xmtr2]);
+    } else if (vexRT[Btn6D] || vexRT[Ch2Xmtr2] < -threshold) {
+      intake_set(vexRT[Btn6D] ? -SPEED4 : vexRT[Ch2Xmtr2]);
+    } else {
+      intake_set(0);
+    }
+  }
 }
 
 void pre_auton() {
