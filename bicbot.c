@@ -30,17 +30,26 @@
 
 #include "Vex_Competition_Includes.c"
 
+//
+// LEAVE EVERYTHING ABOVE ALONE. THANKS.
+//
+
+// Math functions
 #define SIGN(n) ((n > 0) ? 1 : ((n < 0) ? -1 : 0))
 #define NORM(n) (127 * n / 10)
 
-#define SPEED0 0
-#define SPEED1 25
-#define SPEED2 50
-#define SPEED3 100
-#define SPEED4 127
+// Threshold
+#define THRESHOLD 15
 
+// Lift Constants
+#define SETPOINT_0 50
+#define SETPOINT_1 80
+#define SETPOINT_2 140
+
+// Autonomous Pot Select
 #define AUTON_SELECT_NUM_OPTS 3
 
+// Update the variables Y1, X1, X2 with current joystick values.
 void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
   if (abs(vexRT[Ch1]) > threshold) {
     *Y1 = vexRT[Ch1];
@@ -61,6 +70,7 @@ void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
   }
 }
 
+// Set drive based on recored joystick values Y1, X1, X2.
 void drive_set(int Y1, int X1, int X2) {
   motor[rightFront] = Y1 - X2 - X1;
   motor[rightMiddle] = X2 - Y1;
@@ -70,24 +80,33 @@ void drive_set(int Y1, int X1, int X2) {
   motor[leftBack] =  Y1 + X2 + X1;
 }
 
+// Set lift motors to speed.
 void lift_set(int speed) {
   motor[rightLift] = speed;
   motor[leftLift] = speed;
 }
 
+// Move lift to position.
 void lift_setPosition(int position) {
-
+  if (abs(position - SensorValue[liftPot]) > THRESHOLD) {
+    lift_set((position - SensorValue[liftPot]) * 2);
+  } else {
+    lift_set(0);
+  }
 }
 
+// Set intake motors to speed.
 void intake_set(int speed) {
   motor[rightIntake] = speed;
   motor[leftIntake] = speed;
 }
 
+// Autonomous selection.
 int getopt_auton_select(int num_opts) {
   return (int)(SensorValue[auton_select] / num_opts);
 }
 
+// Safety task: Disable all motors whenever button combo is pressed.
 task safety() {
   while (true) {
     if (vexRT[Btn7L] && vexRT[Btn8D]) {
@@ -96,23 +115,25 @@ task safety() {
   }
 }
 
+// Drive task: Update current joyvals and set drive motors continuously.
 task drive() {
-  int Y1 = 0, X1 = 0, X2 = 0, threshold = 15;
+  int Y1 = 0, X1 = 0, X2 = 0;
 
   while (true) {
-    update_drive_joyvals(&Y1, &X1, &X2, threshold);
+    update_drive_joyvals(&Y1, &X1, &X2, THRESHOLD);
     drive_set(Y1, X1, X2);
   }
 }
 
+// Lift task: Button combos and waypoints.
 task lift() {
-  int threshold = 20, wayp_diff = 0;
+  int wayp_diff = 0;
 
   while (true) {
-    if (vexRT[Btn5U] || vexRT[Ch3Xmtr2] > threshold) {
-      lift_set(vexRT[Btn5U] ? SPEED4 : vexRT[Ch3Xmtr2]);
-    } else if (vexRT[Btn5D] || vexRT[Ch3Xmtr2] < -threshold) {
-      lift_set(vexRT[Btn5D] ? -SPEED4 : vexRT[Ch3Xmtr2]);
+    if (vexRT[Btn5U] || vexRT[Ch3Xmtr2] > THRESHOLD) {
+      lift_set(vexRT[Btn5U] ? 127 : vexRT[Ch3Xmtr2]);
+    } else if (vexRT[Btn5D] || vexRT[Ch3Xmtr2] < -THRESHOLD) {
+      lift_set(vexRT[Btn5D] ? -127 : vexRT[Ch3Xmtr2]);
     } else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2]) {
       lift_setPosition(SETPOINT_0);
     } else if (vexRT[Btn7R] || vexRT[Btn7RXmtr2]) {
@@ -125,28 +146,30 @@ task lift() {
   }
 }
 
+// Intake task
 task intake() {
-  int threshold = 20;
-
   while (true) {
-    if (vexRT[Btn6U] || vexRT[Ch2Xmtr2] > threshold) {
-      intake_set(vexRT[Btn6U] ? SPEED4 : vexRT[Ch2Xmtr2]);
-    } else if (vexRT[Btn6D] || vexRT[Ch2Xmtr2] < -threshold) {
-      intake_set(vexRT[Btn6D] ? -SPEED4 : vexRT[Ch2Xmtr2]);
+    if (vexRT[Btn6U] || vexRT[Ch2Xmtr2] > THRESHOLD) {
+      intake_set(vexRT[Btn6U] ? 127 : vexRT[Ch2Xmtr2]);
+    } else if (vexRT[Btn6D] || vexRT[Ch2Xmtr2] < -THRESHOLD) {
+      intake_set(vexRT[Btn6D] ? -127: vexRT[Ch2Xmtr2]);
     } else {
       intake_set(0);
     }
   }
 }
 
+// Ran once before autonomous.
 void pre_auton() {
   // ...
 }
 
+// Autonomous task: Ran during 15 seconds of autonomous period.
 task autonomous() {
   // ...
 }
 
+// Usercontrol, basically main().
 task usercontrol() {
   StartTask(safety);
   StartTask(drive);
