@@ -11,12 +11,12 @@
 #pragma config(Sensor, dgtl7,  sonarOut,       sensorSONAR_cm)
 #pragma config(Sensor, I2C_1,  lift_enc,       sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Motor,  port1,           rightIntake,   tmotorVex393, openLoop)
-#pragma config(Motor,  port2,           rightFront,    tmotorVex393, openLoop, reversed)
+#pragma config(Motor,  port2,           rightFront,    tmotorVex393, openLoop)
 #pragma config(Motor,  port3,           rightMiddle,   tmotorVex393, PIDControl, reversed, encoder, encoderPort, dgtl3, 1000)
 #pragma config(Motor,  port4,           rightBack,     tmotorVex393, openLoop)
 #pragma config(Motor,  port5,           rightLift,     tmotorVex393HighSpeed, PIDControl, reversed, encoder, encoderPort, I2C_1, 1000)
 #pragma config(Motor,  port6,           leftLift,      tmotorVex393HighSpeed, PIDControl, encoder, encoderPort, I2C_1, 1000)
-#pragma config(Motor,  port7,           leftFront,     tmotorVex393, openLoop, reversed)
+#pragma config(Motor,  port7,           leftFront,     tmotorVex393, openLoop)
 #pragma config(Motor,  port8,           leftMiddle,    tmotorVex393, PIDControl, encoder, encoderPort, dgtl5, 1000)
 #pragma config(Motor,  port9,           leftBack,      tmotorVex393, openLoop)
 #pragma config(Motor,  port10,          leftIntake,    tmotorVex393, openLoop, reversed)
@@ -40,7 +40,7 @@
 
 // Thresholds
 #define THRESHOLD 15
-#define LIFT_THRESHOLD 50
+#define LIFT_THRESHOLD 120
 
 // Lift Constants
 #define SETPOINT_0 4050
@@ -59,7 +59,7 @@ void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
   }
 
   if (abs(vexRT[Ch4]) > threshold) {
-    *X1 = -vexRT[Ch4];
+    *X1 = vexRT[Ch4];
   } else {
     *X1 = 0;
   }
@@ -73,12 +73,50 @@ void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
 
 // Set drive based on recored joystick values Y1, X1, X2.
 void drive_set(int Y1, int X1, int X2) {
-  motor[rightFront] = Y1 - X2 - X1;
+  motor[rightFront] = Y1 - X2 + X1;
   motor[rightMiddle] = X2 - Y1;
-  motor[rightBack] =  Y1 - X2 + X1;
-  motor[leftFront] = Y1 + X2 - X1;
+  motor[rightBack] =  Y1 - X2 - X1;
+  motor[leftFront] = Y1 + X2 + X1;
   motor[leftMiddle] = X2 + Y1;
-  motor[leftBack] =  Y1 + X2 + X1;
+  motor[leftBack] =  Y1 + X2 - X1;
+}
+
+// Set drive motors independently.
+void drive_set_ind(int rF, int rM, int rB, int lF, int lM, int lB) {
+  motor[rightFront] = rF;
+  motor[rightMiddle] = rM;
+  motor[rightBack] = rB; 
+  motor[leftFront] = lF;
+  motor[leftMiddle] = lM;
+  motor[leftBack] = lB;
+}
+
+void forward(int speed) {
+  drive_set_ind(speed, speed, speed, speed, speed, speed);
+}
+
+void reverse(int speed) {
+  drive_set_ind(-speed, -speed, -speed, -speed, -speed, -speed);
+}
+
+void turn_right(int speed) {
+  drive_set_ind(-speed, -speed, -speed, speed, speed, speed);
+}
+
+void turn_left(int speed) {
+  drive_set_ind(speed, speed, speed, -speed, -speed, -speed);
+}
+ 
+void right(int speed) {
+  // ...
+}
+
+void left(int speed) {
+  // ...
+}
+
+void stop() {
+  drive_set_ind(0, 0, 0, 0, 0, 0);
 }
 
 // Set lift motors to speed.
@@ -90,12 +128,14 @@ int lift_set(int speed) {
 }
 
 // Move lift to position.
-void lift_set_position(int position) {
+int lift_set_position(int position) {
   if (abs(SensorValue[liftPot] - position) > THRESHOLD) {
     lift_set((SensorValue[liftPot] - position) * 2);
   } else {
     lift_set(0);
   }
+
+  return 0;
 }
 
 // Set intake motors to speed.
@@ -134,7 +174,7 @@ task lift() {
 
   while (true) {
     if (vexRT[Btn5U] || vexRT[Ch3Xmtr2] > THRESHOLD) {
-      lift_set(vexRT[Btn5U] ? 127 : vexRT[Ch3Xmtr2]);
+      curr_pos_set = lift_set(vexRT[Btn5U] ? 127 : vexRT[Ch3Xmtr2]);
     } else if (vexRT[Btn5D] || vexRT[Ch3Xmtr2] < -THRESHOLD) {
       curr_pos_set = lift_set(vexRT[Btn5D] ? -127 : vexRT[Ch3Xmtr2]);
     } else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2]) {
@@ -144,7 +184,7 @@ task lift() {
     } else if (vexRT[Btn7U] || vexRT[Btn7UXmtr2]) {
       curr_pos_set = lift_set_position(SETPOINT_2);
     } else {
-      if (curr_pos_set == 0) {
+      if (!curr_pos_set) {
         curr_pos = SensorValue[lift_enc];
         curr_pos_set = 1;
       }
@@ -153,6 +193,8 @@ task lift() {
 
       if (abs(pos_diff) > LIFT_THRESHOLD) {
         lift_set(pos_diff);
+      } else {
+        lift_set(pos_diff / 3);
       }
     }
   }
@@ -178,13 +220,15 @@ void pre_auton() {
 
 // Autonomous task: Ran during 15 seconds of autonomous period.
 task autonomous() {
-  // ...
+  forward(127);
+  delay(100);
+  stop();
 }
 
 // Usercontrol, basically main().
 task usercontrol() {
   StartTask(safety);
   StartTask(drive);
-  StartTask(lift); // do you even lift?!?!?!?!?!?!??!
+  StartTask(lift); // do you even lift?!?!?!?!?!?!??! https://en.wikipedia.org/wiki/Lift_(mathematics)
   StartTask(intake);
 }
