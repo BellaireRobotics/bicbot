@@ -82,9 +82,11 @@ void drive_set(int Y1, int X1, int X2) {
 }
 
 // Set lift motors to speed.
-void lift_set(int speed) {
+int lift_set(int speed) {
   motor[rightLift] = speed;
   motor[leftLift] = speed;
+
+  return 0;
 }
 
 // Move lift to position.
@@ -133,19 +135,14 @@ task lift() {
   while (true) {
     if (vexRT[Btn5U] || vexRT[Ch3Xmtr2] > THRESHOLD) {
       lift_set(vexRT[Btn5U] ? 127 : vexRT[Ch3Xmtr2]);
-      curr_pos = 0;
     } else if (vexRT[Btn5D] || vexRT[Ch3Xmtr2] < -THRESHOLD) {
-      lift_set(vexRT[Btn5D] ? -127 : vexRT[Ch3Xmtr2]);
-      curr_pos = 0;
+      curr_pos_set = lift_set(vexRT[Btn5D] ? -127 : vexRT[Ch3Xmtr2]);
     } else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2]) {
-      lift_set_position(SETPOINT_0);
-      curr_pos = 0;
+      curr_pos_set = lift_set_position(SETPOINT_0);
     } else if (vexRT[Btn7R] || vexRT[Btn7RXmtr2]) {
-      lift_set_position(SETPOINT_1);
-      curr_pos = 0;
+      curr_pos_set = lift_set_position(SETPOINT_1);
     } else if (vexRT[Btn7U] || vexRT[Btn7UXmtr2]) {
-      lift_set_position(SETPOINT_2);
-      curr_pos = 0;
+      curr_pos_set = lift_set_position(SETPOINT_2);
     } else {
       if (curr_pos_set == 0) {
         curr_pos = SensorValue[lift_enc];
