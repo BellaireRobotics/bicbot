@@ -43,11 +43,11 @@
 #define LIFT_THRESHOLD 60
 
 // Lift Constants
-#define SETPOINT_0 4050
-#define SETPOINT_1 3000
-#define SETPOINT_2 2500
-#define LIFT_BOTTOMLIM 4055
-#define LIFT_TOPLIM 2550 
+#define SETPOINT_0 4025
+#define SETPOINT_1 2800 
+#define SETPOINT_2 1665
+#define LIFT_LOWERLIM 4030
+#define LIFT_UPPERLIM 1675
 
 // Autonomous Pot Select Constants
 #define AUTON_SELECT_NUM_OPTS 3
@@ -87,7 +87,7 @@ void drive_set(int Y1, int X1, int X2) {
 void drive_set_ind(int rF, int rM, int rB, int lF, int lM, int lB) {
   motor[rightFront] = rF;
   motor[rightMiddle] = rM;
-  motor[rightBack] = rB; 
+  motor[rightBack] = rB;
   motor[leftFront] = lF;
   motor[leftMiddle] = lM;
   motor[leftBack] = lB;
@@ -108,7 +108,7 @@ void turn_right(int speed) {
 void turn_left(int speed) {
   drive_set_ind(speed, speed, speed, -speed, -speed, -speed);
 }
- 
+
 void right(int speed) {
   // ...
 }
@@ -131,7 +131,7 @@ int lift_set(int speed) {
 
 // Move lift to position.
 int lift_set_position(int position) {
-  if (abs(SensorValue[liftPot] - position) > THRESHOLD) {
+  if (abs(SensorValue[liftPot] - position) > LIFT_THRESHOLD) {
     lift_set((SensorValue[liftPot] - position) * 2);
   } else {
     lift_set(0);
@@ -149,6 +149,23 @@ void intake_set(int speed) {
 // Autonomous selection.
 int getopt_auton_select(int num_opts) {
   return (int)(SensorValue[auton_select] / num_opts);
+}
+
+// Stop teleop tasks in order to start autonomous task.
+void suspend_teleop_tasks() {
+  suspendTask(safety);
+  suspendTask(drive);
+  suspendTask(lift);
+  suspendTask(intake);
+  suspendTask(debug); // Debugging vals
+}
+
+void resume_teleop_tasks() {
+  StartTask(safety);
+  StartTask(drive);
+  StartTask(lift);
+  StartTask(intake);
+  StartTask(debug); // Debugging vals
 }
 
 // Safety task: Disable all motors whenever button combo is pressed.
@@ -175,9 +192,9 @@ task lift() {
 	int curr_pos = 0, curr_pos_set = 0, pos_diff = 0;
 
   while (true) {
-    if (SensorValue[liftPot] < LIFT_TOPLIM && vexRT[Btn5U] || vexRT[Ch3Xmtr2] > THRESHOLD) {
+    if (SensorValue[liftPot] > LIFT_UPPERLIM && (vexRT[Btn5U] || vexRT[Ch3Xmtr2] > THRESHOLD)) {
       curr_pos_set = lift_set(vexRT[Btn5U] ? 127 : vexRT[Ch3Xmtr2]);
-    } else if (SensorValue[liftPot] > LIFT_BOTTOMLIM && vexRT[Btn5D] || vexRT[Ch3Xmtr2] < -THRESHOLD) {
+    } else if (SensorValue[liftPot] < LIFT_LOWERLIM && (vexRT[Btn5D] || vexRT[Ch3Xmtr2] < -THRESHOLD)) {
       curr_pos_set = lift_set(vexRT[Btn5D] ? -127 : vexRT[Ch3Xmtr2]);
     } else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2]) {
       curr_pos_set = lift_set_position(SETPOINT_0);
@@ -190,7 +207,7 @@ task lift() {
         curr_pos = SensorValue[lift_enc];
         curr_pos_set = 1;
       }
-      
+
       pos_diff = SensorValue[lift_enc] - curr_pos;
 
       if (abs(pos_diff) > LIFT_THRESHOLD) {
@@ -217,15 +234,15 @@ task intake() {
 
 // Detect autonomous start for debugging.
 task autonomous_start_detect() {
-  /*
-  if (vexRT[Btn8U] && vexRT[Btn8L) { // left side
-
-  } else if (vexRT[Btn8U] && vexRT[Btn8R]) { // right side
-
-  } else {
-
+  if (vexRT[Btn8U] && vexRT[Btn8R) { // left side
+    suspend_teleop_tasks();
+    pre_auton();
+    ClearTimer(T1);
+    StartTask(autonomous);
+    while (time100[T1] <= 15000 || !(vexRT[Btn8R] && vexRT[Btn8D]))
+      Sleep(500);      
+    resume_teleop_tasks();
   }
-  */
 }
 
 task debug() {
@@ -247,16 +264,16 @@ void pre_auton() {
 // Autonomous task: Ran during 15 seconds of autonomous period.
 task autonomous() {
   forward(127);
-  Sleep(100);
+  Sleep(1000);
   stop();
 }
 
 // Usercontrol, basically main().
 task usercontrol() {
-  StartTask(safety, 1);
-  StartTask(drive, 1);
-  StartTask(lift, 2); // do you even lift?!?!?!?!?!?!??! https://en.wikipedia.org/wiki/Lift_(mathematics)
-  StartTask(intake, 3);
-  //StartTask(autonomous_start_detect, 10); 
-  StartTask(debug, 10); // Debugging vals
+  StartTask(safety);
+  StartTask(drive);
+  StartTask(lift); // do you even lift?!?!?!?!?!?!??! https://en.wikipedia.org/wiki/Lift_(mathematics)
+  StartTask(intake);
+  StartTask(autonomous_start_detect);
+  StartTask(debug); // Debugging vals
 }
