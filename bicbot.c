@@ -75,12 +75,12 @@ void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
 
 // Set drive based on recored joystick values Y1, X1, X2.
 void drive_set(int Y1, int X1, int X2) {
-  motor[rightFront] = Y1 - X2 + X1;
+  motor[rightFront] = Y1 - X2 - X1;
   motor[rightMiddle] = X2 - Y1;
-  motor[rightBack] =  Y1 - X2 - X1;
-  motor[leftFront] = Y1 + X2 + X1;
+  motor[rightBack] =  Y1 - X2 + X1;
+  motor[leftFront] = Y1 + X2 - X1;
   motor[leftMiddle] = X2 + Y1;
-  motor[leftBack] =  Y1 + X2 - X1;
+  motor[leftBack] =  Y1 + X2 + X1;
 }
 
 // Set drive motors independently.
