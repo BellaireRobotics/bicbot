@@ -44,7 +44,7 @@
 
 // Lift Constants
 #define SETPOINT_0 4025
-#define SETPOINT_1 2800 
+#define SETPOINT_1 2800
 #define SETPOINT_2 1665
 #define LIFT_LOWERLIM 4030
 #define LIFT_UPPERLIM 1675
@@ -131,10 +131,16 @@ int lift_set(int speed) {
 
 // Move lift to position.
 int lift_set_position(int position) {
-  if (abs(SensorValue[liftPot] - position) > LIFT_THRESHOLD) {
-    lift_set((SensorValue[liftPot] - position) * 2);
-  } else {
-    lift_set(0);
+  int lift_triggered = vexRT[Btn5U] || vexRT[Btn5D] || vexRT[Btn7D] || vexRT[Btn7R] || vexRT[Btn7U] || \
+                       vexRT[Btn5UXmtr2] || vexRT[Btn5DXmtr2] || vexRT[Btn7DXmtr2] || vexRT[Btn7RXmtr2] || \
+                       vexRT[Btn7UXmtr2] || abs(vexRT[Ch3Xmtr2]);
+
+  while (!lift_triggered) {
+    if (abs(SensorValue[liftPot] - position) > LIFT_THRESHOLD) {
+      lift_set((SensorValue[liftPot] - position) * 2);
+    } else {
+      lift_set(0);
+    }
   }
 
   return 0;
@@ -149,23 +155,6 @@ void intake_set(int speed) {
 // Autonomous selection.
 int getopt_auton_select(int num_opts) {
   return (int)(SensorValue[auton_select] / num_opts);
-}
-
-// Stop teleop tasks in order to start autonomous task.
-void suspend_teleop_tasks() {
-  suspendTask(safety);
-  suspendTask(drive);
-  suspendTask(lift);
-  suspendTask(intake);
-  suspendTask(debug); // Debugging vals
-}
-
-void resume_teleop_tasks() {
-  StartTask(safety);
-  StartTask(drive);
-  StartTask(lift);
-  StartTask(intake);
-  StartTask(debug); // Debugging vals
 }
 
 // Safety task: Disable all motors whenever button combo is pressed.
@@ -189,7 +178,7 @@ task drive() {
 
 // Lift task: Button combos and waypoints.
 task lift() {
-	int curr_pos = 0, curr_pos_set = 0, pos_diff = 0;
+  int curr_pos = 0, curr_pos_set = 0, pos_diff = 0;
 
   while (true) {
     if (SensorValue[liftPot] > LIFT_UPPERLIM && (vexRT[Btn5U] || vexRT[Ch3Xmtr2] > THRESHOLD)) {
@@ -225,26 +214,14 @@ task intake() {
     if (vexRT[Btn6U] || -vexRT[Ch2Xmtr2] > THRESHOLD) {
       intake_set(vexRT[Btn6U] ? 127 : -vexRT[Ch2Xmtr2]);
     } else if (vexRT[Btn6D] || -vexRT[Ch2Xmtr2] < -THRESHOLD) {
-      intake_set(vexRT[Btn6D] ? -127: -vexRT[Ch2Xmtr2]);
+      intake_set(vexRT[Btn6D] ? -127 : -vexRT[Ch2Xmtr2]);
     } else {
       intake_set(0);
     }
   }
 }
 
-// Detect autonomous start for debugging.
-task autonomous_start_detect() {
-  if (vexRT[Btn8U] && vexRT[Btn8R) { // left side
-    suspend_teleop_tasks();
-    pre_auton();
-    ClearTimer(T1);
-    StartTask(autonomous);
-    while (time100[T1] <= 15000 || !(vexRT[Btn8R] && vexRT[Btn8D]))
-      Sleep(500);      
-    resume_teleop_tasks();
-  }
-}
-
+// Write specific debugging values to stream.
 task debug() {
   clearDebugStream();
 
@@ -255,6 +232,31 @@ task debug() {
     }
   }
 }
+
+// Stop teleop tasks.
+task stop_for_auton() {
+  StopTask(drive);
+  StopTask(lift);
+  StopTask(intake);
+}
+
+
+// Detect autonomous start for practice.
+task auton_start_detect() {
+  if (vexRT[Btn8U] && vexRT[Btn8R]) {
+    StartTask(stop_for_auton);
+    pre_auton();
+    ClearTimer(T1);
+    StartTask(autonomous);
+
+    while (time100[T1] <= 15000 || !(vexRT[Btn8R] && vexRT[Btn8D])) {
+      Sleep(500);
+    }
+
+    StartTask(usercontrol);
+  }
+}
+
 
 // Ran once before autonomous.
 void pre_auton() {
@@ -270,10 +272,11 @@ task autonomous() {
 
 // Usercontrol, basically main().
 task usercontrol() {
+  StopTask(autonomous); // kill autonomous task incase
   StartTask(safety);
   StartTask(drive);
   StartTask(lift); // do you even lift?!?!?!?!?!?!??! https://en.wikipedia.org/wiki/Lift_(mathematics)
   StartTask(intake);
-  StartTask(autonomous_start_detect);
-  StartTask(debug); // Debugging vals
+  StartTask(auton_start_detect);
+  StartTask(debug);
 }
