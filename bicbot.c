@@ -188,7 +188,12 @@ task lift() {
       curr_pos_set = lift_set_position(SETPOINT_1);
     } else if (vexRT[Btn7U] || vexRT[Btn7UXmtr2]) {
       curr_pos_set = lift_set_position(SETPOINT_2);
-  	} else if (vexRT[Btn
+  	} else if (vexRT[Btn7U] || vexRT[Btn7UXmtr2]) {
+  		lift_set(127);
+  		curr_pos_set = 1;
+		} else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2]) {
+			lift_set(127);
+			curr_pos_set = 1;
     } else {
       if (!curr_pos_set) {
         curr_pos = SensorValue[lift_enc];
