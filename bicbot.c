@@ -1,4 +1,3 @@
-#pragma config(UART_Usage, UART2, uartNotUsed, baudRate4800, IOPins, None, None)
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    liftPot,        sensorPotentiometer)
 #pragma config(Sensor, in2,    auton_select,   sensorPotentiometer)
@@ -28,19 +27,15 @@
 // LEAVE EVERYTHING ABOVE ALONE. THANKS.
 //
 
-#include "safety.c"
+//#include "safety.c"
 #include "drive.c"
 #include "lift.c"
 #include "intake.c"
-#include "debug.c"
+//#include "debug.c"
 #include "autonomous.c"
 
 task usercontrol() {
-  StopTask(autonomous); // kill autonomous task incase
-  StartTask(safety);
   StartTask(drive);
   StartTask(lift); // do you even lift?!?!?!?!?!?!??! https://en.wikipedia.org/wiki/Lift_(mathematics)
   StartTask(intake);
-  StartTask(auton_start_detect);
-  StartTask(debug);
 }

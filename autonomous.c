@@ -1,53 +1,60 @@
-// Stop teleop tasks.
-task stop_for_auton() {
-  StopTask(drive);
-  StopTask(lift);
-  StopTask(intake);
+// Autonomous
+
+task auton_lift_floor() {
+  lift_set_position(FLOORPOINT);
+  lift_set(15);
 }
 
-
-// Detect autonomous start for practice.
-task auton_start_detect() {
-  while (true) {
-    if (vexRT[Btn7L] && vexRT[Btn8R]) {
-      StartTask(stop_for_auton);
-      pre_auton();
-      StartTask(autonomous);
-      Sleep(30000);
-      StartTask(usercontrol);
-    }
-  }
+task auton_lift_lowgoal() {
+  lift_set_position(LOWGOAL);
+	lift_set(15);
 }
 
-void getFiveStack() {
+void get_five_stack() {
+	intake_set(-127);
+	Sleep(250);
   intake_set(127);
   forward(127);
-  Sleep(2000);
+  Sleep(1650);
   stop();
+  lift_set(-60);
+  Sleep(400);
+  lift_set(0);
+  ClearTimer(T3);
+
+  while (time1[T3] <= 1500) {
+  	reverse(127);
+  	Sleep(250);
+  	forward(127);
+  	Sleep(400);
+	}
+
   Sleep(1000);
   reverse(127);
-  Sleep(2000);
+  Sleep(1950);
   stop();
   intake_set(0);
 }
 
 void score() {
+  StartTask(auton_lift_lowgoal);
   forward(127);
-  Sleep(3500);
-  lift_set_position(HIGHGOAL);
+  Sleep(2000);
   stop();
   intake_set(-127);
-  Sleep(500);
+  Sleep(3000);
   reverse(127);
-  Sleep(3500);
-  lift_set_position(FLOORPOINT);
-  Sleep(3500);
+  Sleep(1000);
+  StartTask(auton_lift_floor);
+  Sleep(1000);
+  stop();
+  intake_set(0);
 }
 
 void auton_get_next() {
   while (true) {
     if (SensorValue[auton_proceed1]) {
-      getFiveStack();
+      get_five_stack();
       break;
     } else if (SensorValue[auton_proceed2]) {
       score();
@@ -63,7 +70,7 @@ void pre_auton() {
 
 // Autonomous task: Ran during 15 seconds of autonomous period.
 task autonomous() {
-  getFiveStack();
+  get_five_stack();
 
   while (true) {
     auton_get_next();

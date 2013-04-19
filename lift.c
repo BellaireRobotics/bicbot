@@ -1,14 +1,16 @@
+// Lift
+
 // Lift "PID" Function
-#define LIFT(diff) (-180+42*log(diff))
+#define LIFT(diff) (sgn(lift_diff) * (-180+42*log(abs(diff)))) // sgn(lift_diff)*LIFT(abs(lift_diff))
 
 // Lift Constants
 #define LIFT_THRESHOLD 120
 #define LIFT_JOY_THRESHOLD 15
-#define FLOORPOINT 4095
-#define LOWGOAL 2750
-#define HIGHGOAL 1760
-#define LIFT_LOWERLIM 4095
-#define LIFT_UPPERLIM 1575
+#define FLOORPOINT 4150
+#define LOWGOAL 2740
+#define HIGHGOAL 1790
+#define LIFT_LOWERLIM 4150
+#define LIFT_UPPERLIM 1790
 
 // Set lift motors to speed.
 int lift_set(int speed) {
@@ -26,17 +28,19 @@ int lift_set_position(int position) {
   ClearTimer(T2);
 
   while (!lift_triggered) {
+  	lift_diff = SensorValue[liftPot] - position;
+
     if (abs(SensorValue[liftPot] - position) > LIFT_THRESHOLD) {
-      lift_diff = SensorValue[liftPot] - position;
-      lift_set(sgn(lift_diff)*LIFT(abs(lift_diff)));
+      lift_set(lift_diff);
     } else {
       lift_set(0);
+      break;
     }
 
     lift_triggered = vexRT[Btn5U] || vexRT[Btn5D] || vexRT[Btn5UXmtr2] || vexRT[Btn5DXmtr2] || \
                      abs(vexRT[Ch3Xmtr2]) > LIFT_JOY_THRESHOLD || \
                      ((vexRT[Btn7U] || vexRT[Btn7R] || vexRT[Btn7D] || \
-                       vexRT[Btn7UXmtr2] || vexRT[Btn7RXmtr2] || vexRT[Btn7DXmtr2]) && time1[T2] >= 500);
+                       vexRT[Btn7UXmtr2] || vexRT[Btn7RXmtr2] || vexRT[Btn7DXmtr2]) && time1[T2] >= 250);
   }
 
   return 0;
@@ -63,7 +67,7 @@ task lift() {
       curr_pos_set = lift_set(-127);
     } else {
       if (!curr_pos_set) {
-        curr_pos = SensorValue[lift_enc];
+        curr_pos = SensorValue[lift_enc] - 30;
         curr_pos_set = 1;
       }
 
