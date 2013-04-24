@@ -2,7 +2,6 @@
 
 #define DRIVE_JOY_THRESHOLD 15
 
-// Update the variables Y1, X1, X2 with current joystick values.
 void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
   if (abs(vexRT[Ch1]) > threshold) {
     *Y1 = vexRT[Ch1];
@@ -23,7 +22,6 @@ void update_drive_joyvals(int *Y1, int *X1, int *X2, int threshold) {
   }
 }
 
-// Set drive based on recored joystick values Y1, X1, X2.
 void drive_set(int Y1, int X1, int X2) {
   motor[rightFront] = Y1 - X2 + X1;
   motor[rightMiddle] = X2 - Y1;
@@ -33,7 +31,6 @@ void drive_set(int Y1, int X1, int X2) {
   motor[leftBack] =  Y1 + X2 - X1;
 }
 
-// Set drive motors independently.
 void drive_set_ind(int rF, int rM, int rB, int lF, int lM, int lB) {
   motor[rightFront] = rF;
   motor[rightMiddle] = rM;
@@ -71,7 +68,6 @@ void stop() {
   drive_set_ind(0, 0, 0, 0, 0, 0);
 }
 
-// Drive task: Update current joyvals and set drive motors continuously.
 task drive() {
   int Y1 = 0, X1 = 0, X2 = 0;
 

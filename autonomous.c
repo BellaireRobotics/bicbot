@@ -12,13 +12,13 @@ task auton_lift_lowgoal() {
 
 void get_five_stack() {
 	intake_set(-127);
-	Sleep(250);
+	Sleep(270);
   intake_set(127);
   forward(127);
   Sleep(1650);
   stop();
   lift_set(-60);
-  Sleep(400);
+  Sleep(420);
   lift_set(0);
   ClearTimer(T3);
 
@@ -38,8 +38,9 @@ void get_five_stack() {
 
 void score() {
   StartTask(auton_lift_lowgoal);
+  Sleep(200);
   forward(127);
-  Sleep(2000);
+  Sleep(1900);
   stop();
   intake_set(-127);
   Sleep(3000);
@@ -63,12 +64,10 @@ void auton_get_next() {
   }
 }
 
-// Ran once before autonomous.
 void pre_auton() {
   // ...
 }
 
-// Autonomous task: Ran during 15 seconds of autonomous period.
 task autonomous() {
   get_five_stack();
 

@@ -1,6 +1,5 @@
 // Debug
 
-// Write specific debugging values to stream.
 task debug() {
   clearDebugStream();
 

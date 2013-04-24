@@ -1,6 +1,5 @@
 // Safety
 
-// Safety task: Disable all motors whenever button combo is pressed.
 task safety() {
   while (true) {
     if (vexRT[Btn7U] && vexRT[Btn7L] && vexRT[Btn7R] && vexRT[Btn7D] && \

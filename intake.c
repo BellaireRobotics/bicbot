@@ -2,13 +2,11 @@
 
 #define INTAKE_JOY_THRESHOLD 15
 
-// Set intake motors to speed.
 void intake_set(int speed) {
   motor[rightIntake] = speed;
   motor[leftIntake] = speed;
 }
 
-// Intake task.
 task intake() {
   while (true) {
     if (vexRT[Btn6U] || vexRT[Btn6UXmtr2] || -vexRT[Ch2Xmtr2] > INTAKE_JOY_THRESHOLD) {
