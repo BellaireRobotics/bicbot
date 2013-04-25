@@ -34,7 +34,7 @@
 #include "autonomous.c"
 
 task usercontrol() {
-	StartTask(drive);
-	StartTask(lift);
-	StartTask(intake);
+  StartTask(drive);
+  StartTask(lift);
+  StartTask(intake);
 }

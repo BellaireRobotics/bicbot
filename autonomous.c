@@ -7,12 +7,12 @@ task auton_lift_floor() {
 
 task auton_lift_lowgoal() {
   lift_set_position(LOWGOAL);
-	lift_set(15);
+  lift_set(15);
 }
 
 void get_five_stack() {
-	intake_set(-127);
-	Sleep(270);
+  intake_set(-127);
+  Sleep(270);
   intake_set(127);
   forward(127);
   Sleep(1650);
@@ -23,11 +23,11 @@ void get_five_stack() {
   ClearTimer(T3);
 
   while (time1[T3] <= 1500) {
-  	reverse(127);
-  	Sleep(250);
-  	forward(127);
-  	Sleep(400);
-	}
+    reverse(127);
+    Sleep(250);
+    forward(127);
+    Sleep(400);
+  }
 
   Sleep(1000);
   reverse(127);

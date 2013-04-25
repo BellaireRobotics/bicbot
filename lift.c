@@ -28,7 +28,7 @@ int lift_set_position(int position) {
   ClearTimer(T2);
 
   while (!lift_triggered) {
-  	lift_diff = SensorValue[liftPot] - position;
+    lift_diff = SensorValue[liftPot] - position;
 
     if (abs(SensorValue[liftPot] - position) > LIFT_THRESHOLD) {
       lift_set(lift_diff);
