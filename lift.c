@@ -51,19 +51,19 @@ task lift() {
   int curr_pos = 0, curr_pos_set = 0, pos_diff = 0;
 
   while (true) {
-    if (SensorValue[liftPot] > LIFT_UPPERLIM && (vexRT[Btn5U] || vexRT[Btn5UXmtr2] || vexRT[Ch3Xmtr2] > LIFT_JOY_THRESHOLD)) {
+    if (SensorValue[liftPot] > LIFT_UPPERLIM && (vexRT[Btn5U] || vexRT[Btn5UXmtr2] || vexRT[Ch3Xmtr2] > LIFT_JOY_THRESHOLD))
       curr_pos_set = lift_set(vexRT[Btn5U] || vexRT[Btn5UXmtr2] ? 127 : vexRT[Ch3Xmtr2]);
-    } else if (SensorValue[liftPot] < LIFT_LOWERLIM && (vexRT[Btn5D] || vexRT[Btn5DXmtr2] || vexRT[Ch3Xmtr2] < -LIFT_JOY_THRESHOLD)) {
+    else if (SensorValue[liftPot] < LIFT_LOWERLIM && (vexRT[Btn5D] || vexRT[Btn5DXmtr2] || vexRT[Ch3Xmtr2] < -LIFT_JOY_THRESHOLD)) {
       curr_pos_set = lift_set(vexRT[Btn5D] || vexRT[Btn5DXmtr2] ? -127 : vexRT[Ch3Xmtr2]);
-    } else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2]) {
+    else if (vexRT[Btn7D] || vexRT[Btn7DXmtr2])
       curr_pos_set = lift_set_position(FLOORPOINT);
-    } else if (vexRT[Btn7R] || vexRT[Btn7RXmtr2]) {
+    else if (vexRT[Btn7R] || vexRT[Btn7RXmtr2])
       curr_pos_set = lift_set_position(LOWGOAL);
-    } else if (vexRT[Btn7U] || vexRT[Btn7UXmtr2]) {
+    else if (vexRT[Btn7U] || vexRT[Btn7UXmtr2])
       curr_pos_set = lift_set_position(HIGHGOAL);
-    } else if (vexRT[Btn8U] || vexRT[Btn8UXmtr2]) {
+    else if (vexRT[Btn8U] || vexRT[Btn8UXmtr2])
       curr_pos_set = lift_set(127);
-    } else if (vexRT[Btn8D] || vexRT[Btn8DXmtr2]) {
+    else if (vexRT[Btn8D] || vexRT[Btn8DXmtr2])
       curr_pos_set = lift_set(-127);
     } else {
       if (!curr_pos_set) {
